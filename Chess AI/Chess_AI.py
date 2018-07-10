@@ -4,7 +4,7 @@ chessBoardY = ['8', '7', '6', '5', '4', '3', '2', '1']
 board = [[0 for x in range(len(chessBoardX))] for y in range(len(chessBoardY))]
 
 #Set all pieces initial postion and also will allow the game to keep track of all the pieces 
-blackPieces = {'LeftRook': ['R', 0, 4], 'LeftKnight': ['H', 1, 0], 'LeftBishop': ['B', 2, 0], 'Queen': ['Q', 3, 0], 'King': ['K', 4, 3], 'RightBishop': ['B', 5, 0],
+blackPieces = {'LeftRook': ['R', 0, 4], 'LeftKnight': ['H', 1, 0], 'LeftBishop': ['B', 2, 3], 'Queen': ['Q', 3, 0], 'King': ['K', 4, 3], 'RightBishop': ['B', 5, 0],
 			  'RightKnight': ['H', 6, 0], 'RightRook': ['R', 7, 0], 'Pawn1': ['P', 0, 1, 0], 'Pawn2': ['P', 1, 1, 0], 'Pawn3': ['P', 2, 1, 0], 'Pawn4': ['P', 3, 1, 0], 'Pawn5': ['P', 4, 1, 0],
 			 'Pawn6': ['P', 5, 1, 0], 'Pawn7': ['P', 6, 1, 0], 'Pawn8': ['P', 7, 1, 0]}
 
@@ -184,9 +184,126 @@ def FindPossibleRookMoves():
 					whitePossibleMoves[k].append([v[1] - spaces, v[2]])
 
 def FindPossibleKnightMoves():
-	i = 0
+	#Kind of a mess but allows the code to be short relativley straigtforward
+	#Basically loops over the knights moveset and after checking that everything is within bounds
+	# Checks if thers is another piece there and if only if it is a enemy adds it to the availible moves
+	knightMoves = [[-2, 1], [-2, -1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]
+	for k, v in blackPieces.items():
+		if (v[0] == 'H'):
+			for moves in range(len(knightMoves)):
+				if ((v[1] + knightMoves[moves][0]) >= 0 and (v[1] + knightMoves[moves][0]) < 8 and (v[2] + knightMoves[moves][1]) >= 0 and (v[2] + knightMoves[moves][1]) < 8):
+					if (board[v[1] + knightMoves[moves][0]][v[2] + knightMoves[moves][1]] != '0'):
+						if (IsEnemyPiece('white', v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1])):
+								blackPossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
+						
+					else:
+						blackPossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
+
+	for k, v in whitePieces.items():
+		if (v[0] == 'H'):
+			for moves in range(len(knightMoves)):
+				if ((v[1] + knightMoves[moves][0]) >= 0 and (v[1] + knightMoves[moves][0]) < 8 and (v[2] + knightMoves[moves][1]) >= 0 and (v[2] + knightMoves[moves][1]) < 8):
+					if (board[v[1] + knightMoves[moves][0]][v[2] + knightMoves[moves][1]] != '0'):
+						if (IsEnemyPiece('black', v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1])):
+								whitePossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
+						
+					else:
+						whitePossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
+
 def FindPossibleBishopMoves():
-	i = 0
+	for k, v in blackPieces.items():
+		if (v[0] == 'B'):
+			#down right diagonal
+			for spaces in range(1, 8):
+				if (v[1] + spaces < 8 and v[2] + spaces < 8):
+					if (board[v[1] + spaces][v[2] + spaces] != '0'):
+						if (IsEnemyPiece('white', v[1] + spaces, v[2] + spaces)):
+								blackPossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+								break
+						else:
+							break
+					else:
+						blackPossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] - spaces >= 0 and v[2] - spaces >= 0):
+					if (board[v[1] - spaces][v[2] - spaces] != '0'):
+						if (IsEnemyPiece('white', v[1] - spaces, v[2] - spaces)):
+								blackPossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+								break
+						else:
+							break
+					else:
+						blackPossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] - spaces >= 0 and v[2] + spaces < 8):
+					if (board[v[1] - spaces][v[2] + spaces] != '0'):
+						if (IsEnemyPiece('white', v[1] - spaces, v[2] + spaces)):
+								blackPossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+								break
+						else:
+							break
+					else:
+						blackPossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] + spaces < 8 and v[2] - spaces >= 0):
+					if (board[v[1] + spaces][v[2] - spaces] != '0'):
+						if (IsEnemyPiece('white', v[1] + spaces, v[2] - spaces)):
+								blackPossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
+								break
+						else:
+							break
+					else:
+						blackPossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
+
+	for k, v in whitePieces.items():
+		if (v[0] == 'B'):
+			#down right diagonal
+			for spaces in range(1, 8):
+				if (v[1] + spaces < 8 and v[2] + spaces < 8):
+					if (board[v[1] + spaces][v[2] + spaces] != '0'):
+						if (IsEnemyPiece('black', v[1] + spaces, v[2] + spaces)):
+								whitePossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+								break
+						else:
+							break
+					else:
+						whitePossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] - spaces >= 0 and v[2] - spaces >= 0):
+					if (board[v[1] - spaces][v[2] - spaces] != '0'):
+						if (IsEnemyPiece('black', v[1] - spaces, v[2] - spaces)):
+								whitePossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+								break
+						else:
+							break
+					else:
+						whitePossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] - spaces >= 0 and v[2] + spaces < 8):
+					if (board[v[1] - spaces][v[2] + spaces] != '0'):
+						if (IsEnemyPiece('black', v[1] - spaces, v[2] + spaces)):
+								whitePossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+								break
+						else:
+							break
+					else:
+						whitePossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] + spaces < 8 and v[2] - spaces >= 0):
+					if (board[v[1] + spaces][v[2] - spaces] != '0'):
+						if (IsEnemyPiece('black', v[1] + spaces, v[2] - spaces)):
+								whitePossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
+								break
+						else:
+							break
+					else:
+						whitePossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
 def FindPossibleQueenMoves():
 	for k, v in blackPieces.items():
 		if (v[0] == 'Q'):
@@ -235,6 +352,51 @@ def FindPossibleQueenMoves():
 				else:
 					blackPossibleMoves[k].append([v[1] - spaces, v[2]])
 
+			#down right diagonal
+			for spaces in range(1, 8):
+				if (v[1] + spaces < 8 and v[2] + spaces < 8):
+					if (board[v[1] + spaces][v[2] + spaces] != '0'):
+						if (IsEnemyPiece('white', v[1] + spaces, v[2] + spaces)):
+								blackPossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+								break
+						else:
+							break
+					else:
+						blackPossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] - spaces >= 0 and v[2] - spaces >= 0):
+					if (board[v[1] - spaces][v[2] - spaces] != '0'):
+						if (IsEnemyPiece('white', v[1] - spaces, v[2] - spaces)):
+								blackPossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+								break
+						else:
+							break
+					else:
+						blackPossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] - spaces >= 0 and v[2] + spaces < 8):
+					if (board[v[1] - spaces][v[2] + spaces] != '0'):
+						if (IsEnemyPiece('white', v[1] - spaces, v[2] + spaces)):
+								blackPossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+								break
+						else:
+							break
+					else:
+						blackPossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] + spaces < 8 and v[2] - spaces >= 0):
+					if (board[v[1] + spaces][v[2] - spaces] != '0'):
+						if (IsEnemyPiece('white', v[1] + spaces, v[2] - spaces)):
+								blackPossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
+								break
+						else:
+							break
+					else:
+						blackPossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
+
 	for k, v in whitePieces.items():
 		if (v[0] == 'Q'):
 			#Checks spaces below
@@ -281,6 +443,51 @@ def FindPossibleQueenMoves():
 
 				else:
 					whitePossibleMoves[k].append([v[1] - spaces, v[2]])
+
+			#down right diagonal
+			for spaces in range(1, 8):
+				if (v[1] + spaces < 8 and v[2] + spaces < 8):
+					if (board[v[1] + spaces][v[2] + spaces] != '0'):
+						if (IsEnemyPiece('black', v[1] + spaces, v[2] + spaces)):
+								whitePossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+								break
+						else:
+							break
+					else:
+						whitePossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] - spaces >= 0 and v[2] - spaces >= 0):
+					if (board[v[1] - spaces][v[2] - spaces] != '0'):
+						if (IsEnemyPiece('black', v[1] - spaces, v[2] - spaces)):
+								whitePossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+								break
+						else:
+							break
+					else:
+						whitePossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] - spaces >= 0 and v[2] + spaces < 8):
+					if (board[v[1] - spaces][v[2] + spaces] != '0'):
+						if (IsEnemyPiece('black', v[1] - spaces, v[2] + spaces)):
+								whitePossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+								break
+						else:
+							break
+					else:
+						whitePossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+
+			for spaces in range(1, 8):
+				if (v[1] + spaces < 8 and v[2] - spaces >= 0):
+					if (board[v[1] + spaces][v[2] - spaces] != '0'):
+						if (IsEnemyPiece('black', v[1] + spaces, v[2] - spaces)):
+								whitePossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
+								break
+						else:
+							break
+					else:
+						whitePossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
 
 def FindPossibleKingMoves():
 	for k, v in blackPieces.items():
