@@ -1,10 +1,13 @@
+import random
+import operator
+
 chessBoardX = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 chessBoardY = ['8', '7', '6', '5', '4', '3', '2', '1']
 #Set board size
 board = [[0 for x in range(len(chessBoardX))] for y in range(len(chessBoardY))]
 
 #Set all pieces initial postion and also will allow the game to keep track of all the pieces 
-blackPieces = {'LeftRook': ['R', 0, 4], 'LeftKnight': ['H', 1, 0], 'LeftBishop': ['B', 2, 3], 'Queen': ['Q', 3, 0], 'King': ['K', 4, 3], 'RightBishop': ['B', 5, 0],
+blackPieces = {'LeftRook': ['R', 0, 0], 'LeftKnight': ['H', 1, 0], 'LeftBishop': ['B', 2, 0], 'Queen': ['Q', 3, 5], 'King': ['K', 4, 0], 'RightBishop': ['B', 5, 0],
 			  'RightKnight': ['H', 6, 0], 'RightRook': ['R', 7, 0], 'Pawn1': ['P', 0, 1, 0], 'Pawn2': ['P', 1, 1, 0], 'Pawn3': ['P', 2, 1, 0], 'Pawn4': ['P', 3, 1, 0], 'Pawn5': ['P', 4, 1, 0],
 			 'Pawn6': ['P', 5, 1, 0], 'Pawn7': ['P', 6, 1, 0], 'Pawn8': ['P', 7, 1, 0]}
 
@@ -14,11 +17,16 @@ blackPossibleMoves = {'LeftRook': [], 'LeftKnight': [], 'LeftBishop': [], 'Queen
 
 whitePieces = {'LeftRook': ['R', 0, 7], 'LeftKnight': ['H', 1, 7], 'LeftBishop': ['B', 2, 7], 'Queen': ['Q', 3, 7], 'King': ['K', 4, 7], 'RightBishop': ['B', 5, 7],
 			  'RightKnight': ['H', 6, 7], 'RightRook': ['R', 7, 7], 'Pawn1': ['P', 0, 6, 0], 'Pawn2': ['P', 1, 6, 0], 'Pawn3': ['P', 2, 6, 0], 'Pawn4': ['P', 3, 6, 0], 'Pawn5': ['P', 4, 6, 0],
-			 'Pawn6': ['P', 5, 6, 0], 'Pawn7': ['P', 6, 5, 0], 'Pawn8': ['P', 7, 4, 0]}
+			 'Pawn6': ['P', 5, 6, 0], 'Pawn7': ['P', 6, 6, 0], 'Pawn8': ['P', 7, 6, 0]}
 
+#If taken refers to a space that is currently occupied by an allied piece but if that piece is taken will open up
+#This is entirley for the AI as right now all it looks at is the possible moves and since those spaces will not show as
+#possible moves due to there being a piece there it will not account for a defensive attack
+
+#At some point will add this to the AI player to hopefully allow it to make sacrafices if there is a payoff but currently just the player has this attribute
 whitePossibleMoves = {'LeftRook': [], 'LeftKnight': [], 'LeftBishop': [], 'Queen': [], 'King': [], 'RightBishop': [],
 			  'RightKnight': [], 'RightRook': [], 'Pawn1': [], 'Pawn2': [], 'Pawn3': [], 'Pawn4': [], 'Pawn5': [],
-			 'Pawn6': [], 'Pawn7': [], 'Pawn8': []}
+			 'Pawn6': [], 'Pawn7': [], 'Pawn8': [], 'IfTaken': []}
 
 def InitBoard():
 	for y in range(len(chessBoardY)):
@@ -27,7 +35,7 @@ def InitBoard():
 
 def PlacePiece(name, piece, x, y):
 	board[x][y] = piece
-	print('inserting ' + name + ' at board position: ' + chessBoardX[x] + ' ' + chessBoardY[y])
+	#print('inserting ' + name + ' at board position: ' + chessBoardX[x] + ' ' + chessBoardY[y])
 
 def InitPieces():
 	for k, v in blackPieces.items():
@@ -51,8 +59,70 @@ def IsEnemyPiece(enemy, x, y):
 	if (enemy == 'white'):
 		for k, v in whitePieces.items():
 			if (v[1] == x and v[2] == y):
+
 				return True
 	return False
+
+def IsPieceThere(x, y):
+	for k, v in whitePieces.items():
+		if (v[1] == x and v[2] == y):
+			return k
+	return False
+
+def RemovePiece(enemy, x, y):
+	if (enemy == 'black'):
+		for k, v in blackPieces.items():
+			if (v[1] == x and v[2] == y):
+				del blackPieces[k]
+				del blackPossibleMoves[k]
+				return
+
+	if (enemy == 'white'):
+		for k, v in whitePieces.items():
+			if (v[1] == x and v[2] == y):
+				del whitePieces[k]
+				del whitePossibleMoves[k]
+				return
+
+def IsValidMove(key, x, y):
+	moves = whitePossibleMoves.get(key)
+
+	for move in range(len(moves)):
+		if (x == moves[move][0] and y == moves[move][1]):
+			return True
+	return False
+
+def GetPlayValue(x, y):
+	for k, v in whitePieces.items():
+		if (v[1] == x and v[2] == y):
+			if (v[0] == 'K'):
+				return 900
+			if (v[0] == 'Q'):
+				return 90
+			if (v[0] == 'B'):
+				return 30
+			if (v[0] == 'H'):
+				return 30
+			if (v[0] == 'R'):
+				return 50
+			if (v[0] == 'P'):
+				return 10
+
+def GetPieceValue(piece):
+	if (piece == 'K'):
+		return 900
+	if (piece == 'Queen'):
+		return 90
+	if (piece == 'B'):
+		return 30
+	if (piece == 'H'):
+		return 30
+	if (piece == 'R'):
+		return 50
+	if (piece == 'P'):
+		return 10
+	else: 
+		return 5
 
 def FindPossiblePawnMoves():
 #Black Pawns
@@ -65,11 +135,12 @@ def FindPossiblePawnMoves():
 				blackPossibleMoves[k].append([v[1], v[2] + 1])
 
 			if (v[1] + 1 < 8):
-					if (board[v[1] + 1][v[2] + 1] != '0'):
-						blackPossibleMoves[k].append([v[1] + 1, v[2] + 1])
-			if (v[1] - 1 > 0):
-					if (board[v[1] - 1][v[2] + 1] != '0'): 
-						blackPossibleMoves[k].append([v[1] - 1, v[2] + 1])
+					if (board[v[1] + 1][v[2] + 1] != '0' and IsEnemyPiece('white', v[1] + 1, v[2] + 1)):
+						blackPossibleMoves[k].append([v[1] + 1, v[2] + 1, GetPlayValue(v[1] + 1, v[2] + 1)])
+
+			if (v[1] - 1 >= 0):
+					if (board[v[1] - 1][v[2] + 1] != '0' and IsEnemyPiece('white', v[1] - 1, v[2] + 1)): 
+						blackPossibleMoves[k].append([v[1] - 1, v[2] + 1, GetPlayValue(v[1] - 1, v[2] + 1)])
 #White Pawns
 	for k, v in whitePieces.items():
 		if (v[0] == 'P'):
@@ -83,10 +154,14 @@ def FindPossiblePawnMoves():
 					if (board[v[1] + 1][v[2] - 1] != '0'):
 						if (IsEnemyPiece('black', v[1] + 1, v[2] - 1)):
 							whitePossibleMoves[k].append([v[1] + 1, v[2] - 1])
-			if (v[1] - 1 > 0):
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] + 1, v[2] - 1])
+			if (v[1] - 1 >= 0):
 					if (board[v[1] - 1][v[2] - 1] != '0'):
 						if (IsEnemyPiece('black', v[1] - 1, v[2] - 1)):
 							whitePossibleMoves[k].append([v[1] - 1, v[2] - 1])
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] - 1, v[2] - 1])
 
 def FindPossibleRookMoves():
 	for k, v in blackPieces.items():
@@ -95,9 +170,9 @@ def FindPossibleRookMoves():
 			for spaces in range(1, len(chessBoardY) - v[2]):
 				if (board[v[1]][v[2] + spaces] != '0'):
 					if (IsEnemyPiece('white', v[1], v[2] + spaces)):
-							blackPossibleMoves[k].append([v[1], v[2] + spaces])
+							blackPossibleMoves[k].append([v[1], v[2] + spaces, GetPlayValue(v[1], v[2] + spaces)])
 							break
-					else:
+					else: 
 						break
 
 				else:
@@ -106,8 +181,8 @@ def FindPossibleRookMoves():
 			for spaces in range(v[2]):
 				if (board[v[1]][v[2] - spaces] != '0'):
 					if (IsEnemyPiece('white', v[1], v[2] - spaces)):
-							blackPossibleMoves[k].append([v[1], v[2] - spaces])
-					else:
+							blackPossibleMoves[k].append([v[1], v[2] - spaces, GetPlayValue(v[1], v[2] - spaces)])
+					else: 
 						break
 
 				else:
@@ -117,9 +192,9 @@ def FindPossibleRookMoves():
 			for spaces in range(1, len(chessBoardX) - v[1]):
 				if (board[v[1] + spaces][v[2]] != '0'):
 					if (IsEnemyPiece('white', v[1] + spaces, v[2])):
-							blackPossibleMoves[k].append([v[1] + spaces, v[2] ])
+							blackPossibleMoves[k].append([v[1] + spaces, v[2], GetPlayValue(v[1] + spaces, v[2])])
 							break
-					else:
+					else: 
 						break
 
 				else:
@@ -129,8 +204,8 @@ def FindPossibleRookMoves():
 			for spaces in range(1, v[1]):
 				if (board[v[1] - spaces][v[2]] != '0'):
 					if (IsEnemyPiece('white', v[1] - spaces, v[2])):
-							blackPossibleMoves[k].append([v[1] - spaces, v[2]])
-					else:
+							blackPossibleMoves[k].append([v[1] - spaces, v[2], GetPlayValue(v[1] - spaces, v[2])])
+					else: 
 						break
 
 				else:
@@ -144,7 +219,8 @@ def FindPossibleRookMoves():
 					if (IsEnemyPiece('black', v[1], v[2] + spaces)):
 							whitePossibleMoves[k].append([v[1], v[2] + spaces])
 							break
-					else:
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1], v[2] + spaces])
 						break
 
 				else:
@@ -154,7 +230,8 @@ def FindPossibleRookMoves():
 				if (board[v[1]][v[2] - spaces] != '0'):
 					if (IsEnemyPiece('black', v[1], v[2] - spaces)):
 							whitePossibleMoves[k].append([v[1], v[2] - spaces])
-					else:
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1], v[2] - spaces])
 						break
 
 				else:
@@ -166,7 +243,8 @@ def FindPossibleRookMoves():
 					if (IsEnemyPiece('black', v[1] + spaces, v[2])):
 							whitePossibleMoves[k].append([v[1] + spaces, v[2] ])
 							break
-					else:
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1] + spaces, v[2]])
 						break
 
 				else:
@@ -177,7 +255,8 @@ def FindPossibleRookMoves():
 				if (board[v[1] - spaces][v[2]] != '0'):
 					if (IsEnemyPiece('black', v[1] - spaces, v[2])):
 							whitePossibleMoves[k].append([v[1] - spaces, v[2]])
-					else:
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1] - spaces, v[2]])
 						break
 
 				else:
@@ -194,8 +273,8 @@ def FindPossibleKnightMoves():
 				if ((v[1] + knightMoves[moves][0]) >= 0 and (v[1] + knightMoves[moves][0]) < 8 and (v[2] + knightMoves[moves][1]) >= 0 and (v[2] + knightMoves[moves][1]) < 8):
 					if (board[v[1] + knightMoves[moves][0]][v[2] + knightMoves[moves][1]] != '0'):
 						if (IsEnemyPiece('white', v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1])):
-								blackPossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
-						
+								blackPossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1], GetPlayValue(v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1])])
+								
 					else:
 						blackPossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
 
@@ -206,6 +285,10 @@ def FindPossibleKnightMoves():
 					if (board[v[1] + knightMoves[moves][0]][v[2] + knightMoves[moves][1]] != '0'):
 						if (IsEnemyPiece('black', v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1])):
 								whitePossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
+
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
+							break
 						
 					else:
 						whitePossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
@@ -218,7 +301,7 @@ def FindPossibleBishopMoves():
 				if (v[1] + spaces < 8 and v[2] + spaces < 8):
 					if (board[v[1] + spaces][v[2] + spaces] != '0'):
 						if (IsEnemyPiece('white', v[1] + spaces, v[2] + spaces)):
-								blackPossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+								blackPossibleMoves[k].append([v[1] + spaces, v[2] + spaces, GetPlayValue(v[1] + spaces, v[2] + spaces)])
 								break
 						else:
 							break
@@ -229,7 +312,7 @@ def FindPossibleBishopMoves():
 				if (v[1] - spaces >= 0 and v[2] - spaces >= 0):
 					if (board[v[1] - spaces][v[2] - spaces] != '0'):
 						if (IsEnemyPiece('white', v[1] - spaces, v[2] - spaces)):
-								blackPossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+								blackPossibleMoves[k].append([v[1] - spaces, v[2] - spaces, GetPlayValue(v[1] - spaces, v[2] - spaces)])
 								break
 						else:
 							break
@@ -240,7 +323,7 @@ def FindPossibleBishopMoves():
 				if (v[1] - spaces >= 0 and v[2] + spaces < 8):
 					if (board[v[1] - spaces][v[2] + spaces] != '0'):
 						if (IsEnemyPiece('white', v[1] - spaces, v[2] + spaces)):
-								blackPossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+								blackPossibleMoves[k].append([v[1] - spaces, v[2] + spaces, GetPlayValue(v[1] - spaces, v[2] + spaces)])
 								break
 						else:
 							break
@@ -251,7 +334,7 @@ def FindPossibleBishopMoves():
 				if (v[1] + spaces < 8 and v[2] - spaces >= 0):
 					if (board[v[1] + spaces][v[2] - spaces] != '0'):
 						if (IsEnemyPiece('white', v[1] + spaces, v[2] - spaces)):
-								blackPossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
+								blackPossibleMoves[k].append([v[1] + spaces, v[2] - spaces, GetPlayValue(v[1] + spaces, v[2] - spaces)])
 								break
 						else:
 							break
@@ -267,7 +350,8 @@ def FindPossibleBishopMoves():
 						if (IsEnemyPiece('black', v[1] + spaces, v[2] + spaces)):
 								whitePossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
 								break
-						else:
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] + spaces, v[2] + spaces])
 							break
 					else:
 						whitePossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
@@ -278,7 +362,8 @@ def FindPossibleBishopMoves():
 						if (IsEnemyPiece('black', v[1] - spaces, v[2] - spaces)):
 								whitePossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
 								break
-						else:
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] - spaces, v[2] - spaces])
 							break
 					else:
 						whitePossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
@@ -289,7 +374,8 @@ def FindPossibleBishopMoves():
 						if (IsEnemyPiece('black', v[1] - spaces, v[2] + spaces)):
 								whitePossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
 								break
-						else:
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] - spaces, v[2] + spaces])
 							break
 					else:
 						whitePossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
@@ -300,10 +386,12 @@ def FindPossibleBishopMoves():
 						if (IsEnemyPiece('black', v[1] + spaces, v[2] - spaces)):
 								whitePossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
 								break
-						else:
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] + spaces, v[2] - spaces])
 							break
 					else:
 						whitePossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
+
 def FindPossibleQueenMoves():
 	for k, v in blackPieces.items():
 		if (v[0] == 'Q'):
@@ -311,7 +399,7 @@ def FindPossibleQueenMoves():
 			for spaces in range(1, len(chessBoardY) - v[2]):
 				if (board[v[1]][v[2] + spaces] != '0'):
 					if (IsEnemyPiece('white', v[1], v[2] + spaces)):
-							blackPossibleMoves[k].append([v[1], v[2] + spaces])
+							blackPossibleMoves[k].append([v[1], v[2] + spaces, GetPlayValue(v[1], v[2] + spaces)])
 							break
 					else:
 						break
@@ -322,7 +410,7 @@ def FindPossibleQueenMoves():
 			for spaces in range(v[2]):
 				if (board[v[1]][v[2] - spaces] != '0'):
 					if (IsEnemyPiece('white', v[1], v[2] - spaces)):
-							blackPossibleMoves[k].append([v[1], v[2] - spaces])
+							blackPossibleMoves[k].append([v[1], v[2] - spaces, GetPlayValue(v[1], v[2] - spaces)])
 					else:
 						break
 
@@ -333,7 +421,7 @@ def FindPossibleQueenMoves():
 			for spaces in range(1, len(chessBoardX) - v[1]):
 				if (board[v[1] + spaces][v[2]] != '0'):
 					if (IsEnemyPiece('white', v[1] + spaces, v[2])):
-							blackPossibleMoves[k].append([v[1] + spaces, v[2] ])
+							blackPossibleMoves[k].append([v[1] + spaces, v[2], GetPlayValue(v[1] + spaces, v[2])])
 							break
 					else:
 						break
@@ -345,7 +433,7 @@ def FindPossibleQueenMoves():
 			for spaces in range(1, v[1]):
 				if (board[v[1] - spaces][v[2]] != '0'):
 					if (IsEnemyPiece('white', v[1] - spaces, v[2])):
-							blackPossibleMoves[k].append([v[1] - spaces, v[2]])
+							blackPossibleMoves[k].append([v[1] - spaces, v[2], GetPlayValue(v[1] - spaces, v[2])])
 					else:
 						break
 
@@ -357,7 +445,7 @@ def FindPossibleQueenMoves():
 				if (v[1] + spaces < 8 and v[2] + spaces < 8):
 					if (board[v[1] + spaces][v[2] + spaces] != '0'):
 						if (IsEnemyPiece('white', v[1] + spaces, v[2] + spaces)):
-								blackPossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
+								blackPossibleMoves[k].append([v[1] + spaces, v[2] + spaces, GetPlayValue(v[1] + spaces, v[2] + spaces)])
 								break
 						else:
 							break
@@ -368,7 +456,7 @@ def FindPossibleQueenMoves():
 				if (v[1] - spaces >= 0 and v[2] - spaces >= 0):
 					if (board[v[1] - spaces][v[2] - spaces] != '0'):
 						if (IsEnemyPiece('white', v[1] - spaces, v[2] - spaces)):
-								blackPossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
+								blackPossibleMoves[k].append([v[1] - spaces, v[2] - spaces, GetPlayValue(v[1] - spaces, v[2] - spaces)])
 								break
 						else:
 							break
@@ -379,7 +467,7 @@ def FindPossibleQueenMoves():
 				if (v[1] - spaces >= 0 and v[2] + spaces < 8):
 					if (board[v[1] - spaces][v[2] + spaces] != '0'):
 						if (IsEnemyPiece('white', v[1] - spaces, v[2] + spaces)):
-								blackPossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
+								blackPossibleMoves[k].append([v[1] - spaces, v[2] + spaces, GetPlayValue(v[1] - spaces, v[2] + spaces)])
 								break
 						else:
 							break
@@ -390,7 +478,7 @@ def FindPossibleQueenMoves():
 				if (v[1] + spaces < 8 and v[2] - spaces >= 0):
 					if (board[v[1] + spaces][v[2] - spaces] != '0'):
 						if (IsEnemyPiece('white', v[1] + spaces, v[2] - spaces)):
-								blackPossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
+								blackPossibleMoves[k].append([v[1] + spaces, v[2] - spaces, GetPlayValue(v[1] + spaces, v[2] - spaces)])
 								break
 						else:
 							break
@@ -405,7 +493,8 @@ def FindPossibleQueenMoves():
 					if (IsEnemyPiece('black', v[1], v[2] + spaces)):
 							whitePossibleMoves[k].append([v[1], v[2] + spaces])
 							break
-					else:
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1], v[2] + spaces])
 						break
 
 				else:
@@ -415,7 +504,8 @@ def FindPossibleQueenMoves():
 				if (board[v[1]][v[2] - spaces] != '0'):
 					if (IsEnemyPiece('black', v[1], v[2] - spaces)):
 							whitePossibleMoves[k].append([v[1], v[2] - spaces])
-					else:
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1], v[2] - spaces])
 						break
 
 				else:
@@ -427,7 +517,8 @@ def FindPossibleQueenMoves():
 					if (IsEnemyPiece('black', v[1] + spaces, v[2])):
 							whitePossibleMoves[k].append([v[1] + spaces, v[2] ])
 							break
-					else:
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1] + spaces, v[2] ])
 						break
 
 				else:
@@ -438,7 +529,8 @@ def FindPossibleQueenMoves():
 				if (board[v[1] - spaces][v[2]] != '0'):
 					if (IsEnemyPiece('black', v[1] - spaces, v[2])):
 							whitePossibleMoves[k].append([v[1] - spaces, v[2]])
-					else:
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1] - spaces, v[2]])
 						break
 
 				else:
@@ -451,7 +543,8 @@ def FindPossibleQueenMoves():
 						if (IsEnemyPiece('black', v[1] + spaces, v[2] + spaces)):
 								whitePossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
 								break
-						else:
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] + spaces, v[2] + spaces])
 							break
 					else:
 						whitePossibleMoves[k].append([v[1] + spaces, v[2] + spaces])
@@ -462,7 +555,8 @@ def FindPossibleQueenMoves():
 						if (IsEnemyPiece('black', v[1] - spaces, v[2] - spaces)):
 								whitePossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
 								break
-						else:
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] - spaces, v[2] - spaces])
 							break
 					else:
 						whitePossibleMoves[k].append([v[1] - spaces, v[2] - spaces])
@@ -473,7 +567,8 @@ def FindPossibleQueenMoves():
 						if (IsEnemyPiece('black', v[1] - spaces, v[2] + spaces)):
 								whitePossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
 								break
-						else:
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] - spaces, v[2] + spaces])
 							break
 					else:
 						whitePossibleMoves[k].append([v[1] - spaces, v[2] + spaces])
@@ -484,7 +579,8 @@ def FindPossibleQueenMoves():
 						if (IsEnemyPiece('black', v[1] + spaces, v[2] - spaces)):
 								whitePossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
 								break
-						else:
+						else: 
+							whitePossibleMoves['IfTaken'].append([v[1] + spaces, v[2] - spaces])
 							break
 					else:
 						whitePossibleMoves[k].append([v[1] + spaces, v[2] - spaces])
@@ -585,7 +681,36 @@ def FindPossibleKingMoves():
 				else:
 					whitePossibleMoves[k].append([v[1] - spaces, v[2]])
 
+def FindPossibleLoss():
+	for bk, bv in blackPossibleMoves.items():
+		for wk, wv in whitePossibleMoves.items():
+			for bItem in range(len(bv)):
+				for wItem in range(len(wv)):
+					if (bv[bItem][0] == wv[wItem][0]):
+						if (bv[bItem][1] == wv[wItem][1]):
+							if (len(bv[bItem]) > 2):
+								bv[bItem][2] = bv[bItem][2] - GetPieceValue(bk)
+							else:
+								bv[bItem].append(0 - GetPieceValue(bk))
+						elif(blackPieces[bk][1] == wv[wItem][0]):
+							if (blackPieces[bk][2] == wv[wItem][1]):
+								if (len(bv[bItem]) > 2):
+									bv[bItem][2] = bv[bItem][2] + GetPieceValue(bk)
+								else:
+									bv[bItem].append(GetPieceValue(bk))
+						else:
+							if (len(bv[bItem]) > 2):
+								bv[bItem][2] = bv[bItem][2]
+							else:
+								bv[bItem].append(0)
+							
+
 def FindPossibleMoves():
+	for k, v in blackPossibleMoves.items():
+		v.clear()
+	for k, v in whitePossibleMoves.items():
+		v.clear()
+
 	FindPossiblePawnMoves()
 	FindPossibleRookMoves()
 	FindPossibleBishopMoves()
@@ -593,9 +718,160 @@ def FindPossibleMoves():
 	FindPossibleQueenMoves()
 	FindPossibleKingMoves()
 
-InitBoard()
-InitPieces()
-DrawBoard()
-FindPossibleMoves()
+	FindPossibleLoss()
 
-stuff
+def HumanPlayTurn():
+	selectedPiece = input("Enter grid cordinates of piece")
+	selectedPiece = selectedPiece.split()
+	if (selectedPiece[0] == 'A'):
+		selectedPiece[0] = 0
+	elif (selectedPiece[0] == 'B'):
+		selectedPiece[0] = 1
+	elif (selectedPiece[0] == 'C'):
+		selectedPiece[0] = 2
+	elif (selectedPiece[0] == 'D'):
+		selectedPiece[0] = 3
+	elif (selectedPiece[0] == 'E'):
+		selectedPiece[0] = 4
+	elif (selectedPiece[0] == 'F'):
+		selectedPiece[0] = 5
+	elif (selectedPiece[0] == 'G'):
+		selectedPiece[0] = 6
+	elif (selectedPiece[0] == 'H'):
+		selectedPiece[0] = 7
+	else:
+		print("Invalid Input")
+		return False
+
+	if (selectedPiece[1] == '8'):
+		selectedPiece[1] = 0
+	elif(selectedPiece[1] == '7'):
+		selectedPiece[1] = 1
+	elif(selectedPiece[1] == '6'):
+		selectedPiece[1] = 2
+	elif(selectedPiece[1] == '5'):
+		selectedPiece[1] = 3
+	elif(selectedPiece[1] == '4'):
+		selectedPiece[1] = 4
+	elif(selectedPiece[1] == '3'):
+		selectedPiece[1] = 5
+	elif(selectedPiece[1] == '2'):
+		selectedPiece[1] = 6
+	elif(selectedPiece[1] == '1'):
+		selectedPiece[1] = 7
+	else:
+		print("Invalid Input")
+		return False
+	piece = IsPieceThere(selectedPiece[0], selectedPiece[1])
+	if (piece != None):
+		print("You've selected {0}".format(piece))
+		pieceMove = input("Select move coordinates")
+
+		pieceMove = pieceMove.split()
+		if (pieceMove[0] == 'A'):
+			pieceMove[0] = 0
+		elif (pieceMove[0] == 'B'):
+			pieceMove[0] = 1
+		elif (pieceMove[0] == 'C'):
+			pieceMove[0] = 2
+		elif (pieceMove[0] == 'D'):
+			pieceMove[0] = 3
+		elif (pieceMove[0] == 'E'):
+			pieceMove[0] = 4
+		elif (pieceMove[0] == 'F'):
+			pieceMove[0] = 5
+		elif (pieceMove[0] == 'G'):
+			pieceMove[0] = 6
+		elif (pieceMove[0] == 'H'):
+			pieceMove[0] = 7
+		else:
+			print("Invalid Input")
+			return False
+
+		if (pieceMove[1] == '8'):
+			pieceMove[1] = 0
+		elif(pieceMove[1] == '7'):
+			pieceMove[1] = 1
+		elif(pieceMove[1] == '6'):
+			pieceMove[1] = 2
+		elif(pieceMove[1] == '5'):
+			pieceMove[1] = 3
+		elif(pieceMove[1] == '4'):
+			pieceMove[1] = 4
+		elif(pieceMove[1] == '3'):
+			pieceMove[1] = 5
+		elif(pieceMove[1] == '2'):
+			pieceMove[1] = 6
+		elif(pieceMove[1] == '1'):
+			pieceMove[1] = 7
+		else:
+			print("Invalid Input")
+			return False
+
+		if (IsValidMove(piece, pieceMove[0], pieceMove[1])):
+			print("valid move")
+
+			if (board[pieceMove[0]][pieceMove[1]] != 0):
+				RemovePiece('black', pieceMove[0], pieceMove[1])
+
+			board[selectedPiece[0]][selectedPiece[1]] = '0'
+			whitePieces[piece][1] = pieceMove[0]
+			whitePieces[piece][2] = pieceMove[1]
+			if (piece[0] == 'P'):
+				whitePieces[piece][3] = 1
+			PlacePiece(' ', whitePieces[piece][0], whitePieces[piece][1], whitePieces[piece][2]) 
+			return True
+		else:
+			print("invalid move")
+			return False			
+
+def ComputerPlayTurn():
+	moves = []
+	piece = None
+	pieceMove = None
+	play = None
+	for k, v in blackPossibleMoves.items():
+		for item in range(len(v)):
+			if (len(v[item]) > 2):
+				moveList = v[item]
+				moveValue = [k] + moveList
+				moves.append(moveValue)
+	if (len(moves) > 0):
+		play = max(moves, key=lambda x: x[3])
+		pieceMove = [play[1], play[2]]
+		piece = blackPieces[play[0]]
+		play = play[0]
+	else:
+		play = random.choice(list(blackPossibleMoves.keys()))
+		while (len(blackPossibleMoves[play]) == 0):
+			play = random.choice(list(blackPossibleMoves.keys()))
+		piece = blackPieces[play]
+		pieceMove = random.choice(list(blackPossibleMoves[play]))
+
+	if (board[pieceMove[0]][pieceMove[1]] != 0):
+				RemovePiece('white', pieceMove[0], pieceMove[1])
+
+	board[piece[1]][piece[2]] = '0'
+	blackPieces[play][1] = pieceMove[0]
+	blackPieces[play][2] = pieceMove[1]
+	if (piece[0] == 'P'):
+		blackPieces[play][3] = 1
+
+	PlacePiece(' ', blackPieces[play][0], blackPieces[play][1], blackPieces[play][2]) 
+
+def Main():
+	InitBoard()
+	InitPieces()
+	DrawBoard()
+	FindPossibleMoves()
+	gameState = 'white'
+	while(gameState != 'over'):
+		humanTurn = HumanPlayTurn()
+		while(humanTurn == False):
+			humanTurn = HumanPlayTurn()
+		FindPossibleMoves()
+		ComputerPlayTurn()
+		DrawBoard()
+		FindPossibleMoves()
+
+Main()
