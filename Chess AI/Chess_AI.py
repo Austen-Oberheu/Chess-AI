@@ -1,13 +1,42 @@
 import random
 import operator
+import pygame
+
+pygame.init()
+gameDisplay = pygame.display.set_mode((800,600))
+pygame.display.set_caption("ChessBoard")
+white,black,red = (255,255,255),(0,0,0),(255,0,0)
+
+movePieceKey = 0
+moveSquares = []
+
+#AI turns before analyzing board
+AITurnsBeforeAnalyze = 6
+AITurns = 0
+
+imageOffset = 50
+whitePawn = pygame.image.load("images/white_pawn.png")
+whiteBishop = pygame.image.load("images/white_bishop.png")
+whiteKnight = pygame.image.load("images/white_knight.png")
+whiteRook = pygame.image.load("images/white_rook.png")
+whiteQueen = pygame.image.load("images/white_queen.png").convert()
+whiteKing = pygame.image.load("images/white_king.png")
+
+blackPawn = pygame.image.load("images/black_pawn.png")
+blackBishop = pygame.image.load("images/black_bishop.png")
+blackKnight = pygame.image.load("images/black_knight.png")
+blackRook = pygame.image.load("images/black_rook.png")
+blackQueen = pygame.image.load("images/black_queen.png")
+blackKing = pygame.image.load("images/black_king.png")
 
 chessBoardX = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 chessBoardY = ['8', '7', '6', '5', '4', '3', '2', '1']
+cellSize = 20
 #Set board size
 board = [[0 for x in range(len(chessBoardX))] for y in range(len(chessBoardY))]
 
 #Set all pieces initial postion and also will allow the game to keep track of all the pieces 
-blackPieces = {'LeftRook': ['R', 0, 0], 'LeftKnight': ['H', 1, 0], 'LeftBishop': ['B', 2, 0], 'Queen': ['Q', 3, 5], 'King': ['K', 4, 0], 'RightBishop': ['B', 5, 0],
+blackPieces = {'LeftRook': ['R', 0, 0], 'LeftKnight': ['H', 1, 0], 'LeftBishop': ['B', 2, 0], 'Queen': ['Q', 3, 0], 'King': ['K', 4, 0], 'RightBishop': ['B', 5, 0],
 			  'RightKnight': ['H', 6, 0], 'RightRook': ['R', 7, 0], 'Pawn1': ['P', 0, 1, 0], 'Pawn2': ['P', 1, 1, 0], 'Pawn3': ['P', 2, 1, 0], 'Pawn4': ['P', 3, 1, 0], 'Pawn5': ['P', 4, 1, 0],
 			 'Pawn6': ['P', 5, 1, 0], 'Pawn7': ['P', 6, 1, 0], 'Pawn8': ['P', 7, 1, 0]}
 
@@ -109,17 +138,37 @@ def GetPlayValue(x, y):
 				return 10
 
 def GetPieceValue(piece):
-	if (piece == 'K'):
+	if (piece == 'King'):
 		return 900
 	if (piece == 'Queen'):
 		return 90
-	if (piece == 'B'):
+	if (piece == 'LeftBishop'):
 		return 30
-	if (piece == 'H'):
+	if (piece == 'LeftKnight'):
 		return 30
-	if (piece == 'R'):
+	if (piece == 'LeftRook'):
 		return 50
-	if (piece == 'P'):
+	if (piece == 'RightBishop'):
+		return 30
+	if (piece == 'RightKnight'):
+		return 30
+	if (piece == 'RightRook'):
+		return 50
+	if (piece == 'Pawn1'):
+		return 10
+	if (piece == 'Pawn2'):
+		return 10
+	if (piece == 'Pawn3'):
+		return 10
+	if (piece == 'Pawn4'):
+		return 10
+	if (piece == 'Pawn5'):
+		return 10
+	if (piece == 'Pawn6'):
+		return 10
+	if (piece == 'Pawn7'):
+		return 10
+	if (piece == 'Pawn8'):
 		return 10
 	else: 
 		return 5
@@ -149,19 +198,24 @@ def FindPossiblePawnMoves():
 				whitePossibleMoves[k].append([v[1], v[2] - 2])
 			else:
 				whitePossibleMoves[k].append([v[1], v[2] - 1])
-
+			#The ifTaken are to account for moves that cannot currently take place but could if conditions change
+			#i.e. a piece that was blocking it was captured or a piece moves into it a position that it could attack
 			if (v[1] + 1 < 8):
 					if (board[v[1] + 1][v[2] - 1] != '0'):
 						if (IsEnemyPiece('black', v[1] + 1, v[2] - 1)):
 							whitePossibleMoves[k].append([v[1] + 1, v[2] - 1])
 						else: 
 							whitePossibleMoves['IfTaken'].append([v[1] + 1, v[2] - 1])
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1] + 1, v[2] - 1])
 			if (v[1] - 1 >= 0):
 					if (board[v[1] - 1][v[2] - 1] != '0'):
 						if (IsEnemyPiece('black', v[1] - 1, v[2] - 1)):
 							whitePossibleMoves[k].append([v[1] - 1, v[2] - 1])
 						else: 
 							whitePossibleMoves['IfTaken'].append([v[1] - 1, v[2] - 1])
+					else: 
+						whitePossibleMoves['IfTaken'].append([v[1] - 1, v[2] - 1])
 
 def FindPossibleRookMoves():
 	for k, v in blackPieces.items():
@@ -288,7 +342,7 @@ def FindPossibleKnightMoves():
 
 						else: 
 							whitePossibleMoves['IfTaken'].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
-							break
+							
 						
 					else:
 						whitePossibleMoves[k].append([v[1] + knightMoves[moves][0], v[2] + knightMoves[moves][1]])
@@ -692,18 +746,17 @@ def FindPossibleLoss():
 								bv[bItem][2] = bv[bItem][2] - GetPieceValue(bk)
 							else:
 								bv[bItem].append(0 - GetPieceValue(bk))
-						elif(blackPieces[bk][1] == wv[wItem][0]):
-							if (blackPieces[bk][2] == wv[wItem][1]):
-								if (len(bv[bItem]) > 2):
-									bv[bItem][2] = bv[bItem][2] + GetPieceValue(bk)
-								else:
-									bv[bItem].append(GetPieceValue(bk))
-						else:
+					elif(blackPieces[bk][1] == wv[wItem][0]):
+						if (blackPieces[bk][2] == wv[wItem][1]):
 							if (len(bv[bItem]) > 2):
-								bv[bItem][2] = bv[bItem][2]
+								bv[bItem][2] = bv[bItem][2] + GetPieceValue(bk)
 							else:
-								bv[bItem].append(0)
-							
+								bv[bItem].append(GetPieceValue(bk))
+					else:
+						if (len(bv[bItem]) > 2):
+							bv[bItem][2] = bv[bItem][2]
+						else:
+							bv[bItem].append(0)						
 
 def FindPossibleMoves():
 	for k, v in blackPossibleMoves.items():
@@ -720,122 +773,119 @@ def FindPossibleMoves():
 
 	FindPossibleLoss()
 
-def HumanPlayTurn():
-	selectedPiece = input("Enter grid cordinates of piece")
-	selectedPiece = selectedPiece.split()
-	if (selectedPiece[0] == 'A'):
-		selectedPiece[0] = 0
-	elif (selectedPiece[0] == 'B'):
-		selectedPiece[0] = 1
-	elif (selectedPiece[0] == 'C'):
-		selectedPiece[0] = 2
-	elif (selectedPiece[0] == 'D'):
-		selectedPiece[0] = 3
-	elif (selectedPiece[0] == 'E'):
-		selectedPiece[0] = 4
-	elif (selectedPiece[0] == 'F'):
-		selectedPiece[0] = 5
-	elif (selectedPiece[0] == 'G'):
-		selectedPiece[0] = 6
-	elif (selectedPiece[0] == 'H'):
-		selectedPiece[0] = 7
-	else:
-		print("Invalid Input")
-		return False
+def HumanPlayTurn(piece, pieceMove):
+	#selectedPiece = input("Enter grid cordinates of piece")
+	#selectedPiece = selectedPiece.split()
+	#if (selectedPiece[0] == 'A'):
+	#	selectedPiece[0] = 0
+	#elif (selectedPiece[0] == 'B'):
+	#	selectedPiece[0] = 1
+	#elif (selectedPiece[0] == 'C'):
+	#	selectedPiece[0] = 2
+	#elif (selectedPiece[0] == 'D'):
+	#	selectedPiece[0] = 3
+	#elif (selectedPiece[0] == 'E'):
+	#	selectedPiece[0] = 4
+	#elif (selectedPiece[0] == 'F'):
+	#	selectedPiece[0] = 5
+	#elif (selectedPiece[0] == 'G'):
+	#	selectedPiece[0] = 6
+	#elif (selectedPiece[0] == 'H'):
+	#	selectedPiece[0] = 7
+	#else:
+	#	print("Invalid Input")
+	#	return False
 
-	if (selectedPiece[1] == '8'):
-		selectedPiece[1] = 0
-	elif(selectedPiece[1] == '7'):
-		selectedPiece[1] = 1
-	elif(selectedPiece[1] == '6'):
-		selectedPiece[1] = 2
-	elif(selectedPiece[1] == '5'):
-		selectedPiece[1] = 3
-	elif(selectedPiece[1] == '4'):
-		selectedPiece[1] = 4
-	elif(selectedPiece[1] == '3'):
-		selectedPiece[1] = 5
-	elif(selectedPiece[1] == '2'):
-		selectedPiece[1] = 6
-	elif(selectedPiece[1] == '1'):
-		selectedPiece[1] = 7
-	else:
-		print("Invalid Input")
-		return False
-	piece = IsPieceThere(selectedPiece[0], selectedPiece[1])
-	if (piece != None):
-		print("You've selected {0}".format(piece))
-		pieceMove = input("Select move coordinates")
+	#if (selectedPiece[1] == '8'):
+	#	selectedPiece[1] = 0
+	#elif(selectedPiece[1] == '7'):
+	#	selectedPiece[1] = 1
+	#elif(selectedPiece[1] == '6'):
+	#	selectedPiece[1] = 2
+	#elif(selectedPiece[1] == '5'):
+	#	selectedPiece[1] = 3
+	#elif(selectedPiece[1] == '4'):
+	#	selectedPiece[1] = 4
+	#elif(selectedPiece[1] == '3'):
+	#	selectedPiece[1] = 5
+	#elif(selectedPiece[1] == '2'):
+	#	selectedPiece[1] = 6
+	#elif(selectedPiece[1] == '1'):
+	#	selectedPiece[1] = 7
+	#else:
+	#	print("Invalid Input")
+	#	return False
+	#piece = IsPieceThere(selectedPiece[0], selectedPiece[1])
+	#if (piece != None):
+	#	print("You've selected {0}".format(piece))
+	#	pieceMove = input("Select move coordinates")
 
-		pieceMove = pieceMove.split()
-		if (pieceMove[0] == 'A'):
-			pieceMove[0] = 0
-		elif (pieceMove[0] == 'B'):
-			pieceMove[0] = 1
-		elif (pieceMove[0] == 'C'):
-			pieceMove[0] = 2
-		elif (pieceMove[0] == 'D'):
-			pieceMove[0] = 3
-		elif (pieceMove[0] == 'E'):
-			pieceMove[0] = 4
-		elif (pieceMove[0] == 'F'):
-			pieceMove[0] = 5
-		elif (pieceMove[0] == 'G'):
-			pieceMove[0] = 6
-		elif (pieceMove[0] == 'H'):
-			pieceMove[0] = 7
-		else:
-			print("Invalid Input")
-			return False
+	#	pieceMove = pieceMove.split()
+	#	if (pieceMove[0] == 'A'):
+	#		pieceMove[0] = 0
+	#	elif (pieceMove[0] == 'B'):
+	#		pieceMove[0] = 1
+	#	elif (pieceMove[0] == 'C'):
+	#		pieceMove[0] = 2
+	#	elif (pieceMove[0] == 'D'):
+	#		pieceMove[0] = 3
+	#	elif (pieceMove[0] == 'E'):
+	#		pieceMove[0] = 4
+	#	elif (pieceMove[0] == 'F'):
+	#		pieceMove[0] = 5
+	#	elif (pieceMove[0] == 'G'):
+	#		pieceMove[0] = 6
+	#	elif (pieceMove[0] == 'H'):
+	#		pieceMove[0] = 7
+	#	else:
+	#		print("Invalid Input")
+	#		return False
 
-		if (pieceMove[1] == '8'):
-			pieceMove[1] = 0
-		elif(pieceMove[1] == '7'):
-			pieceMove[1] = 1
-		elif(pieceMove[1] == '6'):
-			pieceMove[1] = 2
-		elif(pieceMove[1] == '5'):
-			pieceMove[1] = 3
-		elif(pieceMove[1] == '4'):
-			pieceMove[1] = 4
-		elif(pieceMove[1] == '3'):
-			pieceMove[1] = 5
-		elif(pieceMove[1] == '2'):
-			pieceMove[1] = 6
-		elif(pieceMove[1] == '1'):
-			pieceMove[1] = 7
-		else:
-			print("Invalid Input")
-			return False
+	#	if (pieceMove[1] == '8'):
+	#		pieceMove[1] = 0
+	#	elif(pieceMove[1] == '7'):
+	#		pieceMove[1] = 1
+	#	elif(pieceMove[1] == '6'):
+	#		pieceMove[1] = 2
+	#	elif(pieceMove[1] == '5'):
+	#		pieceMove[1] = 3
+	#	elif(pieceMove[1] == '4'):
+	#		pieceMove[1] = 4
+	#	elif(pieceMove[1] == '3'):
+	#		pieceMove[1] = 5
+	#	elif(pieceMove[1] == '2'):
+	#		pieceMove[1] = 6
+	#	elif(pieceMove[1] == '1'):
+	#		pieceMove[1] = 7
+	#	else:
+	#		print("Invalid Input")
+	#		return False
 
-		if (IsValidMove(piece, pieceMove[0], pieceMove[1])):
-			print("valid move")
+		if (board[pieceMove[0]][pieceMove[1]] != 0):
+			RemovePiece('black', pieceMove[0], pieceMove[1])
 
-			if (board[pieceMove[0]][pieceMove[1]] != 0):
-				RemovePiece('black', pieceMove[0], pieceMove[1])
-
-			board[selectedPiece[0]][selectedPiece[1]] = '0'
-			whitePieces[piece][1] = pieceMove[0]
-			whitePieces[piece][2] = pieceMove[1]
-			if (piece[0] == 'P'):
-				whitePieces[piece][3] = 1
-			PlacePiece(' ', whitePieces[piece][0], whitePieces[piece][1], whitePieces[piece][2]) 
-			return True
-		else:
-			print("invalid move")
-			return False			
+		board[whitePieces[piece][1]][whitePieces[piece][2]] = '0'
+		whitePieces[piece][1] = pieceMove[0]
+		whitePieces[piece][2] = pieceMove[1]
+		if (piece[0] == 'P'):
+			whitePieces[piece][3] = 1
+		PlacePiece(' ', whitePieces[piece][0], whitePieces[piece][1], whitePieces[piece][2]) 
+		movePieceKey = 0
+		return True		
 
 def ComputerPlayTurn():
+	global AITurns
 	moves = []
 	piece = None
 	pieceMove = None
 	play = None
-	for k, v in blackPossibleMoves.items():
-		for item in range(len(v)):
-			if (len(v[item]) > 2):
-				moveList = v[item]
-				moveValue = [k] + moveList
-				moves.append(moveValue)
+	if (AITurns > AITurnsBeforeAnalyze):
+		for k, v in blackPossibleMoves.items():
+			for item in range(len(v)):
+				if (len(v[item]) > 2):
+					moveList = v[item]
+					moveValue = [k] + moveList
+					moves.append(moveValue)
 	if (len(moves) > 0):
 		play = max(moves, key=lambda x: x[3])
 		pieceMove = [play[1], play[2]]
@@ -857,21 +907,113 @@ def ComputerPlayTurn():
 	if (piece[0] == 'P'):
 		blackPieces[play][3] = 1
 
-	PlacePiece(' ', blackPieces[play][0], blackPieces[play][1], blackPieces[play][2]) 
+	PlacePiece(' ', blackPieces[play][0], blackPieces[play][1], blackPieces[play][2])
+	
+	AITurns += 1
+				
+def UpdateBoard():
+	size = 50
+
+	#Piece Images	
+
+	#board length, must be even
+	boardLength = 8
+	gameDisplay.fill(white)
+	cnt = 0
+	for i in range(1,boardLength+1):
+		for z in range(1,boardLength+1):
+			#check if current loop value is even
+			if cnt % 2 == 0:
+				pygame.draw.rect(gameDisplay, white,[size*z,size*i,size,size])
+			else:
+				pygame.draw.rect(gameDisplay, black, [size*z,size*i,size,size])
+			cnt +=1
+		#since theres an even number of squares go back one value
+		cnt-=1
+	#Add a nice boarder
+	pygame.draw.rect(gameDisplay,black,[size,size,boardLength*size,boardLength*size],1)
+	ShowMoves()
+	for k, v in whitePieces.items():
+		if (v[0] == 'P'):
+			gameDisplay.blit(whitePawn, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'R'):
+			gameDisplay.blit(whiteRook, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'B'):
+			gameDisplay.blit(whiteBishop, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'H'):
+			gameDisplay.blit(whiteKnight, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'K'):
+			gameDisplay.blit(whiteKing, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'Q'):
+			gameDisplay.blit(whiteQueen, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+
+	for k, v in blackPieces.items():
+		if (v[0] == 'P'):
+			gameDisplay.blit(blackPawn, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'R'):
+			gameDisplay.blit(blackRook, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'B'):
+			gameDisplay.blit(blackBishop, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'H'):
+			gameDisplay.blit(blackKnight, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'K'):
+			gameDisplay.blit(blackKing, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+		if (v[0] == 'Q'):
+			gameDisplay.blit(blackQueen, ((v[1] * imageOffset) + 45, (v[2] * imageOffset) + 45))
+	
+	#shows potential moves, will add this when a piece is clicked on
+	#for k, v in whitePossibleMoves.items():
+	#	if (k == 'Pawn1'):
+	#		for items in range(len(v)):
+	#			pygame.draw.rect(gameDisplay, red,[size*v[items][0] + imageOffset, size*v[items][1] + imageOffset, size, size])
+
+def ShowMoves():
+	size = 50
+	moves = whitePossibleMoves.get(movePieceKey)
+	if (moves != None):
+		for items in range(len(moves)):
+			pygame.draw.rect(gameDisplay, red,[size*moves[items][0] + imageOffset, size*moves[items][1] + imageOffset, size, size])
+			moveSquares.append(moves[items])
 
 def Main():
 	InitBoard()
 	InitPieces()
 	DrawBoard()
 	FindPossibleMoves()
-	gameState = 'white'
-	while(gameState != 'over'):
-		humanTurn = HumanPlayTurn()
-		while(humanTurn == False):
-			humanTurn = HumanPlayTurn()
-		FindPossibleMoves()
-		ComputerPlayTurn()
-		DrawBoard()
-		FindPossibleMoves()
+	gameState = 'playing'
+	gameExit = False
+	humanTurn = False
+
+	while(gameExit != True):
+		while not gameExit:
+			UpdateBoard()
+			pygame.display.update()
+			FindPossibleMoves()
+			if (humanTurn == True):
+				ComputerPlayTurn()
+				humanTurn = False
+				FindPossibleMoves()
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					gameExit = True
+				if event.type == pygame.MOUSEBUTTONDOWN:
+					# Set the x, y postions of the mouse click
+					x, y = event.pos
+					x = int((x - 50) / imageOffset)
+					y = int((y - 50) / imageOffset)
+
+					if (x >= 0 and x < 8 and y >= 0 and y < 8):
+						global moveSquares
+						global movePieceKey
+						for items in range(len(moveSquares)):
+							if (moveSquares[items][0] == x and moveSquares[items][1] == y):
+								humanTurn = HumanPlayTurn(movePieceKey, pieceMove=[x, y])
+						moveSquares = []
+						movePieceKey = IsPieceThere(x, y)
+					
+					
+		
 
 Main()
+
+pygame.quit()
