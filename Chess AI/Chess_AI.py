@@ -774,93 +774,6 @@ def FindPossibleMoves():
 	FindPossibleLoss()
 
 def HumanPlayTurn(piece, pieceMove):
-	#selectedPiece = input("Enter grid cordinates of piece")
-	#selectedPiece = selectedPiece.split()
-	#if (selectedPiece[0] == 'A'):
-	#	selectedPiece[0] = 0
-	#elif (selectedPiece[0] == 'B'):
-	#	selectedPiece[0] = 1
-	#elif (selectedPiece[0] == 'C'):
-	#	selectedPiece[0] = 2
-	#elif (selectedPiece[0] == 'D'):
-	#	selectedPiece[0] = 3
-	#elif (selectedPiece[0] == 'E'):
-	#	selectedPiece[0] = 4
-	#elif (selectedPiece[0] == 'F'):
-	#	selectedPiece[0] = 5
-	#elif (selectedPiece[0] == 'G'):
-	#	selectedPiece[0] = 6
-	#elif (selectedPiece[0] == 'H'):
-	#	selectedPiece[0] = 7
-	#else:
-	#	print("Invalid Input")
-	#	return False
-
-	#if (selectedPiece[1] == '8'):
-	#	selectedPiece[1] = 0
-	#elif(selectedPiece[1] == '7'):
-	#	selectedPiece[1] = 1
-	#elif(selectedPiece[1] == '6'):
-	#	selectedPiece[1] = 2
-	#elif(selectedPiece[1] == '5'):
-	#	selectedPiece[1] = 3
-	#elif(selectedPiece[1] == '4'):
-	#	selectedPiece[1] = 4
-	#elif(selectedPiece[1] == '3'):
-	#	selectedPiece[1] = 5
-	#elif(selectedPiece[1] == '2'):
-	#	selectedPiece[1] = 6
-	#elif(selectedPiece[1] == '1'):
-	#	selectedPiece[1] = 7
-	#else:
-	#	print("Invalid Input")
-	#	return False
-	#piece = IsPieceThere(selectedPiece[0], selectedPiece[1])
-	#if (piece != None):
-	#	print("You've selected {0}".format(piece))
-	#	pieceMove = input("Select move coordinates")
-
-	#	pieceMove = pieceMove.split()
-	#	if (pieceMove[0] == 'A'):
-	#		pieceMove[0] = 0
-	#	elif (pieceMove[0] == 'B'):
-	#		pieceMove[0] = 1
-	#	elif (pieceMove[0] == 'C'):
-	#		pieceMove[0] = 2
-	#	elif (pieceMove[0] == 'D'):
-	#		pieceMove[0] = 3
-	#	elif (pieceMove[0] == 'E'):
-	#		pieceMove[0] = 4
-	#	elif (pieceMove[0] == 'F'):
-	#		pieceMove[0] = 5
-	#	elif (pieceMove[0] == 'G'):
-	#		pieceMove[0] = 6
-	#	elif (pieceMove[0] == 'H'):
-	#		pieceMove[0] = 7
-	#	else:
-	#		print("Invalid Input")
-	#		return False
-
-	#	if (pieceMove[1] == '8'):
-	#		pieceMove[1] = 0
-	#	elif(pieceMove[1] == '7'):
-	#		pieceMove[1] = 1
-	#	elif(pieceMove[1] == '6'):
-	#		pieceMove[1] = 2
-	#	elif(pieceMove[1] == '5'):
-	#		pieceMove[1] = 3
-	#	elif(pieceMove[1] == '4'):
-	#		pieceMove[1] = 4
-	#	elif(pieceMove[1] == '3'):
-	#		pieceMove[1] = 5
-	#	elif(pieceMove[1] == '2'):
-	#		pieceMove[1] = 6
-	#	elif(pieceMove[1] == '1'):
-	#		pieceMove[1] = 7
-	#	else:
-	#		print("Invalid Input")
-	#		return False
-
 		if (board[pieceMove[0]][pieceMove[1]] != 0):
 			RemovePiece('black', pieceMove[0], pieceMove[1])
 
@@ -1011,9 +924,6 @@ def Main():
 						moveSquares = []
 						movePieceKey = IsPieceThere(x, y)
 					
-					
-		
-
 Main()
 
 pygame.quit()
