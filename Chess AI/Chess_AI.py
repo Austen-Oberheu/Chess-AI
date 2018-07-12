@@ -141,7 +141,7 @@ def GetPieceValue(piece):
 	if (piece == 'King'):
 		return 900
 	if (piece == 'Queen'):
-		return 90
+		return 70
 	if (piece == 'LeftBishop'):
 		return 30
 	if (piece == 'LeftKnight'):
